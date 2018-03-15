@@ -1,8 +1,9 @@
 { stdenv, fetchurl, lib, iasl, dev86, pam, libxslt, libxml2, libX11, xproto, libXext
 , libXcursor, libXmu, qt5, libIDL, SDL, libcap, zlib, libpng, glib, lvm2
 , libXrandr, libXinerama
-, which, alsaLib, curl, libvpx, gawk, nettools, dbus
-, xorriso, makeself, perl, pkgconfig
+, pkgconfig, which, docbook_xsl, docbook_xml_dtd_43
+, alsaLib, curl, libvpx, gawk, nettools, dbus
+, xorriso, makeself, perl
 , javaBindings ? false, jdk ? null
 , pythonBindings ? false, python2 ? null
 , enableExtensionPack ? false, requireFile ? null, patchelf ? null, fakeroot ? null
@@ -19,10 +20,11 @@ let
   python = python2;
   buildType = "release";
   # Manually sha256sum the extensionPack file, must be hex!
-  extpack = "14f152228495a715f526eb74134d43c960919cc534d2bc67cfe34a63e6cf7721";
-  extpackRev = "117224";
-  main = "1af8h3d3sdpcxcp5g75qfq10z81l7m8gk0sz8zqix8c1wqsm0wdm";
-  version = "5.1.26";
+  # Do not forget to update the hash in ./guest-additions/default.nix!
+  extpack = "355ea5fe047f751534720c65398b44290d53f389e0f5f66818f3f36746631d26";
+  extpackRev = "121009";
+  main = "ee2759d47b0b4ac81b8b671c9485c87fb2db12c097b3e7e69b94c1291a8084e8";
+  version = "5.2.8";
 
   # See https://github.com/NixOS/nixpkgs/issues/672 for details
   extensionPack = requireFile rec {
@@ -51,10 +53,12 @@ in stdenv.mkDerivation {
 
   outputs = [ "out" "modsrc" ];
 
+  nativeBuildInputs = [ pkgconfig which docbook_xsl docbook_xml_dtd_43 ];
+
   buildInputs =
     [ iasl dev86 libxslt libxml2 xproto libX11 libXext libXcursor libIDL
       libcap glib lvm2 alsaLib curl libvpx pam xorriso makeself perl
-      pkgconfig which libXmu libpng patchelfUnstable python ]
+      libXmu libpng patchelfUnstable python ]
     ++ optional javaBindings jdk
     ++ optional pythonBindings python # Python is needed even when not building bindings
     ++ optional pulseSupport libpulseaudio
@@ -88,20 +92,15 @@ in stdenv.mkDerivation {
     set +x
   '';
 
-  patches = optional enableHardening ./hardened.patch
-    ++ [ ./qtx11extras.patch ];
+  patches =
+     optional enableHardening ./hardened.patch
+  ++ [ ./qtx11extras.patch ];
+
+
 
   postPatch = ''
     sed -i -e 's|/sbin/ifconfig|${nettools}/bin/ifconfig|' \
       src/VBox/HostDrivers/adpctl/VBoxNetAdpCtl.cpp
-    patch -p0 < ${
-      fetchurl { # for glibc-2.26
-        name = "conflicting-types-for-greg_t.patch";
-        url = "http://www.linuxquestions.org/questions/"
-            + "attachment.php?attachmentid=25801&d=1504099531";
-        sha256 = "1bcyf9qrqxizyjp1s662k6n1cfyfjbl7256r4n20kbr65yxcydps";
-      }
-    }
   '';
 
   # first line: ugly hack, and it isn't yet clear why it's a problem
@@ -205,8 +204,9 @@ in stdenv.mkDerivation {
 
   meta = {
     description = "PC emulator";
-    homepage = http://www.virtualbox.org/;
-    maintainers = [ lib.maintainers.sander ];
-    platforms = lib.platforms.linux;
+    license = licenses.gpl2;
+    homepage = https://www.virtualbox.org/;
+    maintainers = with maintainers; [ flokli sander ];
+    platforms = [ "x86_64-linux" "i686-linux" ];
   };
 }

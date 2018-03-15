@@ -1,23 +1,26 @@
 { stdenv, pythonPackages, mopidy, mopidy-local-images }:
 
 pythonPackages.buildPythonApplication rec {
-  name = "mopidy-iris-${version}";
-  version = "3.6.1";
+  pname = "Mopidy-Iris";
+  version = "3.14.0";
 
   src = pythonPackages.fetchPypi {
-    inherit version;
-    pname = "Mopidy-Iris";
-    sha256 = "1mfi3qx7pvfq4rz0py39lnbzv7sq703b6k6mypzhj1gdzbisfn46";
+    inherit pname version;
+    sha256 = "2c0ec5138e554e91d299ac72a7049bc00d77770a08c16c17e1a9df7f8ef42feb";
   };
 
   propagatedBuildInputs = [
     mopidy
     mopidy-local-images
-    pythonPackages.configobj
-    pythonPackages.pylast
-    pythonPackages.spotipy
-    pythonPackages.raven
-  ];
+  ] ++ (with pythonPackages; [
+    configobj
+    pylast
+    spotipy
+    raven
+  ]);
+
+  # no tests implemented
+  doCheck = false;
 
   meta = with stdenv.lib; {
     homepage = https://github.com/jaedb/Iris;

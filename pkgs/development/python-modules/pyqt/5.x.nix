@@ -1,11 +1,17 @@
-{ lib, fetchurl, pythonPackages, pkgconfig, qtbase, qtsvg, qtwebkit, qtwebengine, dbus_libs
-, lndir, makeWrapper, qmake }:
+{ lib, fetchurl, pythonPackages, pkgconfig, makeWrapper, qmake
+, lndir, qtbase, qtsvg, qtwebkit, qtwebengine, dbus_libs
+, withWebSockets ? false, qtwebsockets
+, withConnectivity ? false, qtconnectivity
+}:
 
 let
-  version = "5.9";
+  pname = "PyQt";
+  version = "5.10";
+
   inherit (pythonPackages) buildPythonPackage python dbus-python sip;
 in buildPythonPackage {
-  name = "PyQt-${version}";
+  pname = pname;
+  version = version;
   format = "other";
 
   meta = with lib; {
@@ -18,14 +24,14 @@ in buildPythonPackage {
 
   src = fetchurl {
     url = "mirror://sourceforge/pyqt/PyQt5/PyQt-${version}/PyQt5_gpl-${version}.tar.gz";
-    sha256 = "15hh4z5vd45dcswjla58q6rrfr6ic7jfz2n7c8lwfb10rycpj3mb";
+    sha256 = "0l2zy6b7bfjxmg4bb8yikg6i8iy2xdwmvk7knfmrzfpqbmkycbrl";
   };
 
-  nativeBuildInputs = [ pkgconfig makeWrapper qmake ];
+  nativeBuildInputs = [ pkgconfig qmake ];
 
   buildInputs = [
     lndir qtbase qtsvg qtwebkit qtwebengine dbus_libs
-  ];
+  ] ++ lib.optional withWebSockets qtwebsockets ++ lib.optional withConnectivity qtconnectivity;
 
   propagatedBuildInputs = [ sip ];
 
@@ -36,10 +42,10 @@ in buildPythonPackage {
     lndir ${dbus-python} $out
     rm -rf "$out/nix-support"
 
-    export PYTHONPATH=$PYTHONPATH:$out/lib/${python.libPrefix}/site-packages
+    export PYTHONPATH=$PYTHONPATH:$out/${python.sitePackages}
 
     substituteInPlace configure.py \
-      --replace 'install_dir=pydbusmoddir' "install_dir='$out/lib/${python.libPrefix}/site-packages/dbus/mainloop'" \
+      --replace 'install_dir=pydbusmoddir' "install_dir='$out/${python.sitePackages}/dbus/mainloop'" \
       --replace "ModuleMetadata(qmake_QT=['webkitwidgets'])" "ModuleMetadata(qmake_QT=['webkitwidgets', 'printsupport'])"
 
     ${python.executable} configure.py  -w \

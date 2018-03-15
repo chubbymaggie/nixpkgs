@@ -1,10 +1,10 @@
-{ stdenv, fetchurl, pkgconfig, gettext, perl
-, expat, glib, cairo, pango, gdk_pixbuf, atk, at_spi2_atk, gobjectIntrospection
-, xorg, epoxy, json_glib, libxkbcommon, gmp
+{ stdenv, fetchurl, fetchpatch, pkgconfig, gettext, perl
+, expat, glib, cairo, pango, gdk_pixbuf, atk, at-spi2-atk, gobjectIntrospection
+, xorg, epoxy, json-glib, libxkbcommon, gmp
 , waylandSupport ? stdenv.isLinux, wayland, wayland-protocols
 , xineramaSupport ? stdenv.isLinux
 , cupsSupport ? stdenv.isLinux, cups ? null
-, darwin
+, darwin, gnome3
 }:
 
 assert cupsSupport -> cups != null;
@@ -12,16 +12,14 @@ assert cupsSupport -> cups != null;
 with stdenv.lib;
 
 let
-  ver_maj = "3.22";
-  ver_min = "24";
-  version = "${ver_maj}.${ver_min}";
+  version = "3.22.26";
 in
 stdenv.mkDerivation rec {
   name = "gtk+3-${version}";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/gtk+/${ver_maj}/gtk+-${version}.tar.xz";
-    sha256 = "cbb16e4cfc928ab8f5f22f7290616f95f6ebc8c97cc724a2007b07ced833592b";
+    url = "mirror://gnome/sources/gtk+/${gnome3.versionBranch version}/gtk+-${version}.tar.xz";
+    sha256 = "61eef0d320e541976e2dfe445729f12b5ade53050ee9de6184235cb60cd4b967";
   };
 
   outputs = [ "out" "dev" ];
@@ -29,11 +27,18 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkgconfig gettext gobjectIntrospection perl ];
 
-  patches = [ ./3.0-immodules.cache.patch ];
+  patches = [
+    ./3.0-immodules.cache.patch
+    (fetchpatch {
+      name = "Xft-setting-fallback-compute-DPI-properly.patch";
+      url = "https://bug757142.bugzilla-attachments.gnome.org/attachment.cgi?id=344123";
+      sha256 = "0g6fhqcv8spfy3mfmxpyji93k8d4p4q4fz1v9a1c1cgcwkz41d7p";
+    })
+  ];
 
-  buildInputs = [ libxkbcommon epoxy json_glib ];
+  buildInputs = [ libxkbcommon epoxy json-glib ];
   propagatedBuildInputs = with xorg; with stdenv.lib;
-    [ expat glib cairo pango gdk_pixbuf atk at_spi2_atk
+    [ expat glib cairo pango gdk_pixbuf atk at-spi2-atk gnome3.gsettings-desktop-schemas
       libXrandr libXrender libXcomposite libXi libXcursor libSM libICE ]
     ++ optionals waylandSupport [ wayland wayland-protocols ]
     ++ optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ AppKit Cocoa ])
@@ -68,6 +73,13 @@ stdenv.mkDerivation rec {
     # Launcher
     moveToOutput bin/gtk-launch "$out"
   '';
+
+  passthru = {
+    updateScript = gnome3.updateScript {
+      packageName = "gtk+";
+      attrPath = "gtk3";
+    };
+  };
 
   meta = with stdenv.lib; {
     description = "A multi-platform toolkit for creating graphical user interfaces";

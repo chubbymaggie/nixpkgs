@@ -51,6 +51,10 @@ rec {
   git-annex = pkgs.haskellPackages.git-annex;
   gitAnnex = git-annex;
 
+  git-annex-metadata-gui = libsForQt5.callPackage ./git-annex-metadata-gui {
+    inherit (python3Packages) buildPythonApplication pyqt5 git-annex-adapter;
+  };
+
   git-annex-remote-b2 = callPackage ./git-annex-remote-b2 { };
 
   git-annex-remote-rclone = callPackage ./git-annex-remote-rclone { };
@@ -84,6 +88,8 @@ rec {
 
   git-remote-hg = callPackage ./git-remote-hg { };
 
+  git-secret = callPackage ./git-secret { };
+
   git-stree = callPackage ./git-stree { };
 
   git2cl = callPackage ./git2cl { };
@@ -93,6 +99,8 @@ rec {
   gitRemoteGcrypt = callPackage ./git-remote-gcrypt { };
 
   gitflow = callPackage ./gitflow { };
+
+  grv = callPackage ./grv { };
 
   hub = callPackage ./hub {
     inherit (darwin) Security;
@@ -109,7 +117,7 @@ rec {
     git = gitSVN;
   };
 
-  svn2git_kde = callPackage ./svn2git-kde { };
+  svn_all_fast_export = libsForQt5.callPackage ./svn-all-fast-export { };
 
   tig = callPackage ./tig { };
 

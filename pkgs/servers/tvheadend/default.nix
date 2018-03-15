@@ -3,7 +3,7 @@
 , which, zlib }:
 
 let
-  version = "4.2.1";
+  version = "4.2.5";
 
 in stdenv.mkDerivation rec {
   name = "tvheadend-${version}";
@@ -12,7 +12,7 @@ in stdenv.mkDerivation rec {
     owner  = "tvheadend";
     repo   = "tvheadend";
     rev    = "v${version}";
-    sha256 = "1lhk8psvifmn4kjwyfxjj21z0apyr59zizzsfd4j22v7bk66rrl9";
+    sha256 = "199b0xm4lfdspmrirvzzg511yh358awciz23zmccvlvq86b548pz";
   };
 
   buildInputs = [
@@ -39,7 +39,8 @@ in stdenv.mkDerivation rec {
   preConfigure = ''
     patchShebangs ./configure
 
-    substituteInPlace src/config.c --replace /usr/bin/tar ${gnutar}/bin/tar
+    substituteInPlace src/config.c \
+      --replace /usr/bin/tar ${gnutar}/bin/tar
 
     # the version detection script `support/version` reads this file if it
     # exists, so let's just use that

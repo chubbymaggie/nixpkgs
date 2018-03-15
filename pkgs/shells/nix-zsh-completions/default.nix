@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitHub }:
 
 let
-  version = "0.3.2";
+  version = "0.3.8";
 in
 
 stdenv.mkDerivation rec {
@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     owner = "spwhitt";
     repo = "nix-zsh-completions";
     rev = "${version}";
-    sha256 = "0i306k50g07n9smy68npma1k90sv173zy12jdi8wm7h1sj53m5rv";
+    sha256 = "05ynd38br2kn657g7l01jg1q8ja9xwrdyb95w02gh7j9cww2k06w";
   };
 
   installPhase = ''
@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage = http://github.com/spwhitt/nix-zsh-completions;
+    homepage = https://github.com/spwhitt/nix-zsh-completions;
     description = "ZSH completions for Nix, NixOS, and NixOps";
     license = stdenv.lib.licenses.bsd3;
     platforms = stdenv.lib.platforms.all;

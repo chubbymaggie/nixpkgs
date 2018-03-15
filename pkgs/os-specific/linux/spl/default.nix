@@ -1,20 +1,18 @@
 { fetchFromGitHub, stdenv, autoreconfHook, coreutils, gawk
-, configFile ? "all"
 
 # Kernel dependencies
-, kernel ? null
+, kernel
 }:
 
 with stdenv.lib;
 
 let
-  buildKernel = any (n: n == configFile) [ "kernel" "all" ];
-  buildUser = any (n: n == configFile) [ "user" "all" ];
   common = { version
     , sha256
     , rev ? "spl-${version}"
+    , broken ? false
     } @ args : stdenv.mkDerivation rec {
-      name = "spl-${configFile}-${version}${optionalString buildKernel "-${kernel.version}"}";
+      name = "spl-${version}-${kernel.version}";
 
       src = fetchFromGitHub {
         owner = "zfsonlinux";
@@ -24,7 +22,7 @@ let
 
       patches = [ ./const.patch ./install_prefix.patch ];
 
-      nativeBuildInputs = [ autoreconfHook ];
+      nativeBuildInputs = [ autoreconfHook ] ++ kernel.moduleBuildDependencies;
 
       hardeningDisable = [ "pic" ];
 
@@ -36,8 +34,7 @@ let
       '';
 
       configureFlags = [
-        "--with-config=${configFile}"
-      ] ++ optionals buildKernel [
+        "--with-config=kernel"
         "--with-linux=${kernel.dev}/lib/modules/${kernel.modDirVersion}/source"
         "--with-linux-obj=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
       ];
@@ -52,6 +49,8 @@ let
           kernel.
         '';
 
+        inherit broken;
+
         homepage = http://zfsonlinux.org/;
         platforms = platforms.linux;
         license = licenses.gpl2Plus;
@@ -59,17 +58,22 @@ let
       };
   };
 in
-  assert any (n: n == configFile) [ "kernel" "user" "all" ];
-  assert buildKernel -> kernel != null;
+  assert kernel != null;
 {
     splStable = common {
-      version = "0.7.3";
-      sha256 = "0j8mb9ky3pjz9hnz5w6fajpzajl15jq3p0xvxb6lhpqj3rjzsqxb";
+      version = "0.7.6";
+      sha256 = "1l641d89k48ngmarx9mxh8gw2zzrf7fw7n8zmslhz4h1152plddb";
     };
 
     splUnstable = common {
-      version = "2017-10-16";
-      rev = "28920ea3346c1c905c5f727ea3e54297e6257568";
-      sha256 = "0m42na009ivb9q9gz15ra94wqx5xdw18waanm56aqzrjxbqqa3ll";
+      version = "2018-01-24";
+      rev = "23602fdb39e1254c669707ec9d2d0e6bcdbf1771";
+      sha256 = "09py2dwj77f6s2qcnkwdslg5nxb3hq2bq39zpxpm6msqyifhl69h";
+    };
+
+    splLegacyCrypto = common {
+      version = "2018-01-24";
+      rev = "23602fdb39e1254c669707ec9d2d0e6bcdbf1771";
+      sha256 = "09py2dwj77f6s2qcnkwdslg5nxb3hq2bq39zpxpm6msqyifhl69h";
     };
 }
